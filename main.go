@@ -32,6 +32,8 @@ func main() {
 
 	r.HandleFunc("/", returnHandle) // registrando uma função para ser executada ao ter uma requisição no path /
 
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static")))) // registrando um prefixo para o path /static/ e passando o diretório de arquivos para o handler
+
 	fmt.Println(http.ListenAndServe(":8080", r)) // subindo e servindo uma aplicação
 }
 
