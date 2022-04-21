@@ -30,14 +30,15 @@ func main() {
 	// 	insertValue()
 	// }()
 
-	r.HandleFunc("/", returnHandle) // registrando uma função para ser executada ao ter uma requisição no path /
+	r.HandleFunc("/", homeHandler)          // registrando uma função para ser executada ao ter uma requisição no path /
+	r.HandleFunc("/{id}/view", byIdHandler) // registrando uma função para ser executada ao ter uma requisição no path /
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static")))) // registrando um prefixo para o path /static/ e passando o diretório de arquivos para o handler
 
 	fmt.Println(http.ListenAndServe(":8080", r)) // subindo e servindo uma aplicação
 }
 
-func returnHandle(w http.ResponseWriter, r *http.Request) {
+func homeHandler(w http.ResponseWriter, r *http.Request) {
 	items := func() []Post {
 		defer recoverPanic()
 		return listPosts()
@@ -48,6 +49,24 @@ func returnHandle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError) // se houver erro, manda um status code 500
 	}
 
+}
+
+func byIdHandler(w http.ResponseWriter, r *http.Request) {
+	posts := []Post{}
+	id := mux.Vars(r)["id"]                                           // pegando o id do post
+	post := getPostById(id)                                           // pegando o post pelo id
+	posts = append(posts, *post)                                      // salvando o post no slice de posts
+	t := template.Must(template.ParseFiles("templates/index.html"))   // registrando um template para ser servido
+	if err := t.ExecuteTemplate(w, "index.html", posts); err != nil { // verificando se houve erro na execução do template, passando o post pro template
+		http.Error(w, err.Error(), http.StatusInternalServerError) // se houver erro, manda um status code 500
+	}
+}
+
+func getPostById(id string) *Post {
+	row := db.QueryRow("SELECT id, title, body FROM posts WHERE id = ?", id) // executando a query
+	post := Post{}
+	row.Scan(&post.Id, &post.Title, &post.Body)
+	return &post
 }
 
 func listPosts() []Post {
