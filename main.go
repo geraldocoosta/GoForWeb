@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
 )
 
 type Post struct {
@@ -22,29 +23,32 @@ func main() {
 	defer db.Close() // fechando a conexão com o banco de dados
 	db.Ping()        // verificando se houve erro na conexão com o banco de dados
 
+	r := mux.NewRouter() // criando um novo router
+
 	// func() {
 	// 	defer recoverPanic()
 	// 	insertValue()
 	// }()
+
+	r.HandleFunc("/", returnHandle) // registrando uma função para ser executada ao ter uma requisição no path /
+
+	fmt.Println(http.ListenAndServe(":8080", r)) // subindo e servindo uma aplicação
+}
+
+func returnHandle(w http.ResponseWriter, r *http.Request) {
 	items := func() []Post {
 		defer recoverPanic()
-		return getValues()
+		return listPosts()
 	}()
-	http.HandleFunc("/", returnHandle(items))      // registrando uma função para ser executada ao ter uma requisição no path /
-	fmt.Println(http.ListenAndServe(":8080", nil)) // subindo e servindo uma aplicação
-}
 
-func returnHandle(posts []Post) func(w http.ResponseWriter, r *http.Request) {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		t := template.Must(template.ParseFiles("templates/index.html"))   // registrando um template para ser servido
-		if err := t.ExecuteTemplate(w, "index.html", posts); err != nil { // verificando se houve erro na execução do template, passando o post pro template
-			http.Error(w, err.Error(), http.StatusInternalServerError) // se houver erro, manda um status code 500
-		}
+	t := template.Must(template.ParseFiles("templates/index.html"))   // registrando um template para ser servido
+	if err := t.ExecuteTemplate(w, "index.html", items); err != nil { // verificando se houve erro na execução do template, passando o post pro template
+		http.Error(w, err.Error(), http.StatusInternalServerError) // se houver erro, manda um status code 500
 	}
+
 }
 
-func getValues() []Post {
+func listPosts() []Post {
 	items := []Post{}
 	rows, error := db.Query("SELECT id, title, body FROM posts") // executando a query
 	if error != nil {
