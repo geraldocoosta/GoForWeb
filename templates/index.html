@@ -8,12 +8,6 @@
     <title>Posts</title>
   </head>
   <body>
-    {{range $val := .}}
-    <h1>{{$val.Title}}</h1>
-    <ul>
-      <li>{{$val.Id}}</li>
-      <li>{{$val.Body}}</li>
-    </ul>
-    {{ end }}
+      {{ template "layout" . }}
   </body>
 </html>

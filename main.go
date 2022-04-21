@@ -44,8 +44,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		return listPosts()
 	}()
 
-	t := template.Must(template.ParseFiles("templates/index.html"))   // registrando um template para ser servido
-	if err := t.ExecuteTemplate(w, "index.html", items); err != nil { // verificando se houve erro na execução do template, passando o post pro template
+	t := template.Must(template.ParseFiles("templates/body.html", "templates/index.html")) // registrando um template para ser servido
+	if err := t.ExecuteTemplate(w, "index.html", items); err != nil {                      // verificando se houve erro na execução do template, passando o post pro template
 		http.Error(w, err.Error(), http.StatusInternalServerError) // se houver erro, manda um status code 500
 	}
 
@@ -53,11 +53,11 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func byIdHandler(w http.ResponseWriter, r *http.Request) {
 	posts := []Post{}
-	id := mux.Vars(r)["id"]                                           // pegando o id do post
-	post := getPostById(id)                                           // pegando o post pelo id
-	posts = append(posts, *post)                                      // salvando o post no slice de posts
-	t := template.Must(template.ParseFiles("templates/index.html"))   // registrando um template para ser servido
-	if err := t.ExecuteTemplate(w, "index.html", posts); err != nil { // verificando se houve erro na execução do template, passando o post pro template
+	id := mux.Vars(r)["id"]                                                                // pegando o id do post
+	post := getPostById(id)                                                                // pegando o post pelo id
+	posts = append(posts, *post)                                                           // salvando o post no slice de posts
+	t := template.Must(template.ParseFiles("templates/body.html", "templates/index.html")) // registrando um template para ser servido
+	if err := t.ExecuteTemplate(w, "index.html", posts); err != nil {                      // verificando se houve erro na execução do template, passando o post pro template
 		http.Error(w, err.Error(), http.StatusInternalServerError) // se houver erro, manda um status code 500
 	}
 }
