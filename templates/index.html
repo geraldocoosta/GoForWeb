@@ -4,13 +4,15 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{{.Title}}</title>
+    <title>Posts</title>
   </head>
   <body>
-    <h1>{{.Title}}</h1>
+    {{range $val := .}}
+    <h1>{{$val.Title}}</h1>
     <ul>
-      <li>{{.Id}}</li>
-      <li>{{.Body}}</li>
+      <li>{{$val.Id}}</li>
+      <li>{{$val.Body}}</li>
     </ul>
+    {{ end }}
   </body>
 </html>

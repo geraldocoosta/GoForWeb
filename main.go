@@ -18,13 +18,33 @@ type Post struct {
 var db, error = sql.Open("mysql", "root:root@/go-course?charset=utf8")
 
 func main() {
+	defer db.Close() // fechando a conexão com o banco de dados
+	db.Ping()        // verificando se houve erro na conexão com o banco de dados
 
-	db.Ping() // verificando se houve erro na conexão com o banco de dados
+	// insertValue()
+	items := getValues()
 
-	insertValue()
-
-	http.HandleFunc("/", Handle)                   // registrando uma função para ser executada ao ter uma requisição no path /
+	http.HandleFunc("/", returnHandle(items))      // registrando uma função para ser executada ao ter uma requisição no path /
 	fmt.Println(http.ListenAndServe(":8080", nil)) // subindo e servindo uma aplicação
+}
+
+func getValues() []Post {
+	items := []Post{}
+	rows, error := db.Query("SELECT id, title, body FROM posts") // executando a query
+	if error != nil {
+		panic(error)
+	}
+
+	for rows.Next() { // percorrendo os resultados da query
+		post := Post{}
+
+		error = rows.Scan(&post.Id, &post.Title, &post.Body) // pegando os resultados da query e salvando em variáveis
+		if error != nil {
+			panic(error)
+		}
+		items = append(items, post) // salvando os resultados da query em um slice de posts
+	}
+	return items
 }
 
 func insertValue() {
@@ -39,20 +59,12 @@ func insertValue() {
 	}
 }
 
-// func Handle é adicionada como função para ser executada ao ter uma requisição no path /
-func Handle(w http.ResponseWriter, r *http.Request) {
-	post := Post{
-		Id:    1,
-		Title: "My first post",
-		Body:  "This is my first post",
-	}
+func returnHandle(posts []Post) func(w http.ResponseWriter, r *http.Request) {
 
-	if r.FormValue("title") != "" {
-		post.Title = r.FormValue("title")
-	}
-
-	t := template.Must(template.ParseFiles("templates/index.html"))  // registrando um template para ser servido
-	if err := t.ExecuteTemplate(w, "index.html", post); err != nil { // verificando se houve erro na execução do template, passando o post pro template
-		http.Error(w, err.Error(), http.StatusInternalServerError) // se houver erro, manda um status code 500
+	return func(w http.ResponseWriter, r *http.Request) {
+		t := template.Must(template.ParseFiles("templates/index.html"))   // registrando um template para ser servido
+		if err := t.ExecuteTemplate(w, "index.html", posts); err != nil { // verificando se houve erro na execução do template, passando o post pro template
+			http.Error(w, err.Error(), http.StatusInternalServerError) // se houver erro, manda um status code 500
+		}
 	}
 }
